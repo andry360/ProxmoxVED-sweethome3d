@@ -117,6 +117,11 @@ function update_script() {
     cp -r /opt/sweethome3d-src/SweetHome3DJS/deployDirectHomeRecorder/. /opt/sweethome3d/
     # Upstream ships index.html without a doctype, which leaves browsers in quirks mode.
     sed -i '1i <!DOCTYPE html>' /opt/sweethome3d/index.html
+    # Standards mode (unlike quirks mode) requires every ancestor up to html to have an
+    # explicit height for "height: 100%" to resolve, and the shipped stylesheet only sets
+    # it on body. Without this, body collapses to its content's height, and the app's own
+    # layout code then sizes home-pane off that collapsed height, leaving a blank page.
+    sed -i '/<\/head>/i <style>html{height:100%!important}</style>' /opt/sweethome3d/index.html
     ln -sfn /opt/sweethome3d_data /opt/sweethome3d/data
     cat <<EOF >~/.sweethome3d
 ${SH3D_TAG}

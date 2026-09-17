@@ -174,6 +174,11 @@ msg_info "Deploying Sweet Home 3D Online"
 cp -r /opt/sweethome3d-src/SweetHome3DJS/deployDirectHomeRecorder/. /opt/sweethome3d/
 # Upstream ships index.html without a doctype, which leaves browsers in quirks mode.
 sed -i '1i <!DOCTYPE html>' /opt/sweethome3d/index.html
+# Standards mode (unlike quirks mode) requires every ancestor up to html to have an
+# explicit height for "height: 100%" to resolve, and the shipped stylesheet only sets
+# it on body. Without this, body collapses to its content's height, and the app's own
+# layout code then sizes home-pane off that collapsed height, leaving a blank page.
+sed -i '/<\/head>/i <style>html{height:100%!important}</style>' /opt/sweethome3d/index.html
 # index.html, writeData.php and listHomes.php all hardcode a relative "data" directory, so
 # that name is not ours to choose; the symlink keeps the saved homes out of the tree a
 # rebuild overwrites.
