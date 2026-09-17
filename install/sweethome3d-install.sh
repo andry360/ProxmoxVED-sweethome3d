@@ -150,16 +150,16 @@ msg_ok "Fetched Sweet Home 3D ${SH3D_TAG} sources"
 
 msg_info "Building Sweet Home 3D Online (Patience)"
 cd /opt/sweethome3d-src/SweetHome3DJS
-# JSweet reads a handful of javac internals reflectively, which JDK 17+ refuses unless
-# those packages are opened. Ant forks a fresh JVM per <java> task, so the flags have to
-# travel in the environment - ANT_OPTS would only reach Ant's own JVM.
-export JAVA_TOOL_OPTIONS="\
-  --add-exports jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED \
-  --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED \
-  --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED \
-  --add-opens jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED \
-  --add-opens jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED \
-  --add-opens jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"
+# JSweet reflects into a wide slice of javac's internals, which JDK 17+ blocks unless
+# those packages are opened. JAVA_TOOL_OPTIONS only recognizes "--flag=value" as a single
+# token - "--flag value" (space-separated) makes the JVM refuse to start at all - and Ant
+# forks a fresh JVM per <java> task, so the flags have to travel in the environment rather
+# than as ANT_OPTS, which would only reach Ant's own JVM.
+for _cs_javac_pkg in api code comp file jvm main model parser processing tree util; do
+  JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-}${JAVA_TOOL_OPTIONS:+ }--add-exports=jdk.compiler/com.sun.tools.javac.${_cs_javac_pkg}=ALL-UNNAMED --add-opens=jdk.compiler/com.sun.tools.javac.${_cs_javac_pkg}=ALL-UNNAMED"
+done
+export JAVA_TOOL_OPTIONS
+unset _cs_javac_pkg
 # applicationPhpDeploy, not applicationDistribution: it depends on the latter and then
 # copies the generated files into the lib/ layout index.html actually references.
 # Deliberately not silenced: this is the step that breaks, and an exit code on its own
