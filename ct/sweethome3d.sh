@@ -90,16 +90,6 @@ function update_script() {
 
     msg_info "Building Sweet Home 3D Online (Patience)"
     cd /opt/sweethome3d-src/SweetHome3DJS
-    # JSweet reads a handful of javac internals reflectively, which JDK 17+ refuses unless
-    # those packages are opened. Ant forks a fresh JVM per <java> task, so the flags have to
-    # travel in the environment - ANT_OPTS would only reach Ant's own JVM.
-    export JAVA_TOOL_OPTIONS="\
-      --add-exports jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED \
-      --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED \
-      --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED \
-      --add-opens jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED \
-      --add-opens jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED \
-      --add-opens jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"
     # Deliberately not silenced: this is the step that breaks, and an exit code on its own
     # tells a tester nothing about which transpilation unit failed.
     if ! ant applicationPhpDeploy; then
