@@ -90,6 +90,16 @@ function update_script() {
 
     msg_info "Building Sweet Home 3D Online (Patience)"
     cd /opt/sweethome3d-src/SweetHome3DJS
+    # JSweet reflects into a wide slice of javac's internals, which JDK 17+ blocks unless
+    # those packages are opened. JAVA_TOOL_OPTIONS only recognizes "--flag=value" as a single
+    # token - "--flag value" (space-separated) makes the JVM refuse to start at all - and Ant
+    # forks a fresh JVM per <java> task, so the flags have to travel in the environment rather
+    # than as ANT_OPTS, which would only reach Ant's own JVM.
+    for _cs_javac_pkg in api code comp file jvm main model parser processing tree util; do
+      JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-}${JAVA_TOOL_OPTIONS:+ }--add-exports=jdk.compiler/com.sun.tools.javac.${_cs_javac_pkg}=ALL-UNNAMED --add-opens=jdk.compiler/com.sun.tools.javac.${_cs_javac_pkg}=ALL-UNNAMED"
+    done
+    export JAVA_TOOL_OPTIONS
+    unset _cs_javac_pkg
     # Deliberately not silenced: this is the step that breaks, and an exit code on its own
     # tells a tester nothing about which transpilation unit failed.
     if ! ant applicationPhpDeploy; then
